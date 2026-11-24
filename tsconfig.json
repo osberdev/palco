@@ -1,0 +1,13 @@
+{
+  // Nuxt generates the rest in .nuxt/tsconfig.json: strict mode, paths and
+  // auto-import declarations. Only what that base lacks is added here.
+  "extends": "./.nuxt/tsconfig.json",
+  "compilerOptions": {
+    // The database scripts run on Node, which requires explicit extensions
+    // in relative imports.
+    "allowImportingTsExtensions": true,
+    // The base leaves it false. Without it, `rows[0]` excludes `undefined`,
+    // and no-unnecessary-condition would ask to remove guards that are needed.
+    "noUncheckedIndexedAccess": true
+  }
+}
