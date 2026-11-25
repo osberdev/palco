@@ -1,8 +1,9 @@
 {
   "name": "palco",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Sistema web de venta de boletos para eventos culturales en doce recintos de siete países",
   "author": "Oscar Alejandro Bermúdez Cota",
+  "repository": "https://github.com/osberdev/palco",
   "private": true,
   "type": "module",
   "scripts": {

@@ -1,0 +1,12 @@
+# Secrets, local builds and anything the image does not need.
+.env
+.env.*
+!.env.example
+node_modules
+.output
+.nuxt
+.data
+.git
+tests
+*.log
+palco.db*

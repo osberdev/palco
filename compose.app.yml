@@ -1,0 +1,60 @@
+# PALCO ready to run: the database, a one-shot initialization and the built
+# application. PALCO.bat and palco.sh start it; they also generate .env on the
+# first run. Separate from docker-compose.yml, which is the development database.
+#
+# The project name is palco-app, never palco: that one is the development
+# environment, and sharing it would mix their containers and volumes.
+name: palco-app
+
+x-timezone: &timezone
+  # The server decides "today", past dates and the gate's opening hours with its
+  # own clock: in UTC, after 18:00 in Mexico it would already be tomorrow.
+  TZ: ${PALCO_TZ:-America/Mexico_City}
+
+services:
+  db:
+    image: postgres:18.6-alpine3.24
+    restart: unless-stopped
+    environment:
+      <<: *timezone
+      POSTGRES_USER: palco_admin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Falta POSTGRES_PASSWORD en .env}
+      POSTGRES_DB: palco
+      PALCO_APP_PASSWORD: ${PALCO_APP_PASSWORD:?Falta PALCO_APP_PASSWORD en .env}
+      PALCO_LECTOR_PASSWORD: ${PALCO_LECTOR_PASSWORD:?Falta PALCO_LECTOR_PASSWORD en .env}
+    # No published port: only the other services reach the database.
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -h 127.0.0.1 -U palco_admin -d palco']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  init:
+    build: .
+    image: palco-app:1.0.0
+    command: ['sh', 'docker/app/init.sh']
+    env_file: .env
+    environment:
+      <<: *timezone
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: 'no'
+
+  app:
+    image: palco-app:1.0.0
+    env_file: .env
+    environment:
+      <<: *timezone
+    ports:
+      - '${PALCO_PORT:-3000}:3000'
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+volumes:
+  pgdata:
